@@ -8,6 +8,9 @@ Created on Wed May 31 09:26:07 2017
 
 import pandas as pd
 import numpy as np
+import matplotlib.pyplot as plt
+import matplotlib.font_manager as fm
+chinesefont = fm.FontProperties(fname='C:/Windows/Fonts/msyh.ttc')
 
 def main():
     math_df = pd.read_excel('./data/tongzhou_201701/math.xlsx')
@@ -27,6 +30,9 @@ def main():
         math_df = pd.DataFrame(data)
         math_df = math_df.set_index([index])
         print(math_df)
-        math_df.plot(kind='bar', figsize=(15.5, 7.5), title=school_group)
-    
+        ax = math_df.plot(kind='bar', figsize=(15.5, 7.5))
+        ax.set_xticklabels(math_df.index.values, fontproperties=chinesefont)
+        ax.set_title(school_group, fontproperties=chinesefont)
+        plt.show()
+        
 if __name__ == "__main__": main() 
