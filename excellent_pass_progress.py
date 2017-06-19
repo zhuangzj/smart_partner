@@ -43,8 +43,6 @@ def main():
     # give name to the title in loc 31
     df_05.columns.values[31] = '总分'
     
-
-    
     # merge o1 data to get the school and class info
     df_05.rename(columns = {'教育ID' : '学号'}, inplace = True)
     df_05 = df_05[['学号', '总分']].merge(df_01[['学校', '班级', '学号', '姓名', '性别']], on = '学号')
