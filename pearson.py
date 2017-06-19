@@ -6,6 +6,7 @@ Created on Mon Jun 12 13:25:00 2017
 """
 
 import pandas as pd
+import seaborn as sns
 
 def main():
     chinese_df = pd.read_excel('./data/tongzhou_201701/chinese.xlsx')
@@ -56,6 +57,12 @@ def main():
     df[['chinese', 'math', 'physics', 'biology', 'history', 'ethic']] = df[['chinese', 'math', 'physics', 'biology', 'history', 'ethic']]/100
     df['english'] = df['english']/65
     print(df.corr(method='pearson'))
+    
+    corr = df.corr(method='pearson')
+    sns.heatmap(corr, 
+    xticklabels=corr.columns.values,
+    yticklabels=corr.columns.values)
+    sns.plt.show()
     
     
 if __name__ == "__main__": main() 
