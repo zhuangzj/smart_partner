@@ -46,6 +46,11 @@ def main():
     #print(df)
     orignal = bigger_than_20_percent(df_diff)
     new = bigger_than_20_percent(df_diff_weight)
+    data = []
+    data.append(orignal)
+    data.append(new)
+    result_df = pd.DataFrame(data, columns=['建模', '推理', '数据处理', '直观', '运算'], index=['原始成绩变化幅度>20%', '2:1权重成绩变化幅度>20%'])
+    print(result_df)
 
 def bigger_than_20_percent(df):
     data = []
