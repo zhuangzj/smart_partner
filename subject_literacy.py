@@ -20,13 +20,19 @@ def main():
     # 没有考到的素养沿用上一次考试该素养的值
     df05 = pd.merge(df05, df01[['数据处理']], left_index=True, right_index=True, how='left')
     
-    result05 = exams_process(df01, df05)
-    result07 = exams_process(df05, df07)
-
-
+    result05_df = exams_process(df01, df05)
+    result05_df.columns = pd.MultiIndex.from_product([['test201705'], result05_df.columns])
+    result07_df = exams_process(df05, df07)
+    result07_df.columns = pd.MultiIndex.from_product([['test201707'], result07_df.columns])
+ #   print(result05_df)
+ #   print(result07_df)
+    result_merged_df = pd.merge(result05_df, result07_df, left_index=True, right_index=True)
+    print(result_merged_df)
+    result_merged_df.to_csv('./data/学科素养规则改进数据模拟.csv')
+    
 def exams_process(df_last, df_now):
- #   print(df05.head())
- #   print(df07.head())
+ #   print(df_last.head())
+ #   print(df_now.head())
      
     # 两次成绩
     df = pd.merge(df_now, df_last, left_index=True, right_index=True, how='left')
@@ -55,7 +61,6 @@ def exams_process(df_last, df_now):
     data.append(orignal)
     data.append(new)
     result_df = pd.DataFrame(data, columns=['建模', '推理', '数据处理', '直观', '运算'], index=['原始成绩变化幅度>20%', '2:1权重成绩变化幅度>20%'])
-    print(result_df)
     return result_df
         
 def bigger_than_20_percent(df):
