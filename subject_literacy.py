@@ -19,28 +19,16 @@ def main():
     
     # 没有考到的素养沿用上一次考试该素养的值
     df05 = pd.merge(df05, df01[['数据处理']], left_index=True, right_index=True, how='left')
-#    data05 = []
-#    test05_raw_df = raw_rangeability(df01, df05)
-#    data05.append(test05_raw_df)
-#    test05_weight_2to1_df, df05_weight = exams_process(df01, df01, df05, 2/3, 'old:now=2:1')
-#    data05.append(test05_weight_2to1_df)
-#    test05_weight_2to1_df, df05_weight = exams_process(df01, df01, df05, 3/4, 'old:now=3:1')
-#    data05.append(test05_weight_2to1_df)
-#    rangeability05_df = pd.DataFrame(data05, columns=['建模', '推理', '数据处理', '直观', '运算'], index=['原始成绩变化幅度>20%', '2:1权重成绩变化幅度>20%', '3:1权重成绩变化幅度>20%'])
-    rangeability05_df, df_weight05_2to1, df_weight05_3to1 = rangeablity_df(df01, df01, df01, df05)
-    print(rangeability05_df)
- #   result05_df.columns = pd.MultiIndex.from_product([['test201705'], result05_df.columns])
-    rangeability07_df, df_weight07_2to1, df_weight07_3to1 = rangeablity_df(df05, df_weight05_2to1, df_weight05_3to1, df07)
-    print(rangeability07_df)
- #    result07_df, df07_weight = exams_process(df05, df05_weight, df07, 2/3, 'old:now=2:1')
- #   print(result07_df)
- #   result07_df.columns = pd.MultiIndex.from_product([['test201707'], result07_df.columns])
- #   print(result05_df)
- #   print(result07_df)
- #   result_merged_df = pd.merge(result05_df, result07_df, left_index=True, right_index=True)
- #   print(result_merged_df)
-#    result_merged_df.to_csv('./data/学科素养规则改进数据模拟.csv')
-def rangeablity_df(df_last, df_last_weight_2to1, df_last_weight_3to1, df):
+    rangeability05_df, df_weight05_2to1, df_weight05_3to1, df_weight05_4to1 = rangeablity_df(df01, df01, df01, df01, df05)
+    rangeability05_df.columns = pd.MultiIndex.from_product([['test201705'], rangeability05_df.columns])
+    
+    rangeability07_df, df_weight07_2to1, df_weight07_3to1, df_weight07_4to1 = rangeablity_df(df05, df_weight05_2to1, df_weight05_3to1, df_weight05_4to1, df07)
+    rangeability07_df.columns = pd.MultiIndex.from_product([['test201707'], rangeability07_df.columns])
+    rangeability_merged_df = pd.merge(rangeability05_df, rangeability07_df, left_index=True, right_index=True)
+    print(rangeability_merged_df)
+    rangeability_merged_df.to_csv('./data/学科素养规则改进数据模拟.csv')
+    
+def rangeablity_df(df_last, df_last_weight_2to1, df_last_weight_3to1, df_last_weight_4to1, df):
     data = []
     # 两次原始数据计算成绩变化程度
     rangeability_raw = raw_rangeability(df_last, df)
@@ -51,9 +39,12 @@ def rangeablity_df(df_last, df_last_weight_2to1, df_last_weight_3to1, df):
     # 利用权重(3:1)计算成绩和成绩变化程度
     test_weight_3to1, rangeability_weight_3to1 = weight_rangeability(df_last_weight_3to1, df, 3/4)
     data.append(rangeability_weight_3to1)
-    rangeability_df = pd.DataFrame(data, columns=['建模', '推理', '数据处理', '直观', '运算'], index=['原始成绩变化幅度>20%', '2:1权重成绩变化幅度>20%', '3:1权重成绩变化幅度>20%'])
+    # 利用权重(4:1)计算成绩和成绩变化程度
+    test_weight_4to1, rangeability_weight_4to1 = weight_rangeability(df_last_weight_4to1, df, 4/5)
+    data.append(rangeability_weight_4to1)
+    rangeability_df = pd.DataFrame(data, columns=['建模', '推理', '数据处理', '直观', '运算'], index=['原始成绩变化幅度>20%', '2:1权重成绩变化幅度>20%', '3:1权重成绩变化幅度>20%', '4:1权重成绩变化幅度>20%'])
 
-    return rangeability_df, test_weight_2to1, test_weight_3to1
+    return rangeability_df, test_weight_2to1, test_weight_3to1, test_weight_4to1
 
 def raw_rangeability(df_last, df_now):
     # 两次成绩(unweight)
@@ -66,7 +57,7 @@ def raw_rangeability(df_last, df_now):
     # 成绩变化幅度
     df = df[['diff建模', 'diff推理', 'diff数据处理', 'diff直观', 'diff运算']] / df_dividend[['建模_y', '推理_y', '数据处理_y', '直观_y', '运算_y']].values
     rangeability = bigger_than_20_percent(df)
-#    result_df = pd.DataFrame(rangeability, columns=['建模', '推理', '数据处理', '直观', '运算'], index=['原始成绩变化幅度>20%'])
+    
     return rangeability
 
 def weight_rangeability(df_last_weight, df_now, weight):
@@ -85,7 +76,6 @@ def weight_rangeability(df_last_weight, df_now, weight):
     # 成绩变化幅度
     df_weight = df_weight[['diff建模', 'diff推理', 'diff数据处理', 'diff直观', 'diff运算']] / df_weight_dividend[['建模_y', '推理_y', '数据处理_y', '直观_y', '运算_y']].values
     rangeability = bigger_than_20_percent(df_weight)
-#    result_df = pd.DataFrame(rangeability, columns=['建模', '推理', '数据处理', '直观', '运算'], index=['原始成绩变化幅度>20%', str_weight+'权重成绩变化幅度>20%'])
     
     return df_weight_score, rangeability
 
