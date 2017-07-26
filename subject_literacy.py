@@ -40,40 +40,20 @@ def main():
     df.ix[df['201701直观'] == 0, '201701直观'] = 0.01
     df.ix[df['201701运算'] == 0, '201701运算'] = 0.01
     df.ix[df['201701数据处理'] == 0, '201701数据处理'] = 0.01
-    print(df)
+ #   print(df)
     df_diff = df[['diff建模', 'diff推理', 'diff数据处理', 'diff直观', 'diff运算']] / df[['201701建模', '201701推理', '201701数据处理', '201701直观', '201701运算']].values
     df_diff_weight = df[['diff建模weight', 'diff推理weight', 'diff数据处理weight', 'diff直观weight', 'diff运算weight']] / df[['201701建模', '201701推理', '201701数据处理', '201701直观', '201701运算']].values
     #print(df)
-    original = []
-    original.append(df_diff[df_diff['diff建模'].abs() > 0.2].shape[0]/df.shape[0])
-    original.append(df_diff[df_diff['diff推理'].abs() > 0.2].shape[0]/df.shape[0])
-    original.append(df_diff[df_diff['diff数据处理'].abs() > 0.2].shape[0]/df.shape[0])
-    original.append(df_diff[df_diff['diff直观'].abs() > 0.2].shape[0]/df.shape[0])
-    original.append(df_diff[df_diff['diff运算'].abs() > 0.2].shape[0]/df.shape[0])
-    print(original)
-    new = []
-    new.append(df_diff_weight[df_diff_weight['diff建模weight'].abs() > 0.2].shape[0]/df.shape[0])
-    new.append(df_diff_weight[df_diff_weight['diff推理weight'].abs() > 0.2].shape[0]/df.shape[0])
-    new.append(df_diff_weight[df_diff_weight['diff数据处理weight'].abs() > 0.2].shape[0]/df.shape[0])
-    new.append(df_diff_weight[df_diff_weight['diff直观weight'].abs() > 0.2].shape[0]/df.shape[0])
-    new.append(df_diff_weight[df_diff_weight['diff运算weight'].abs() > 0.2].shape[0]/df.shape[0])
-    print(new)
- #  df05_merged[['diff_建模','diff_推理','diff_直观','diff_运算','diff_数据处理']] = (df05_merged[['建模_x','推理_x','直观_x','运算_x','数据处理_x']] - df05_merged[['建模_y','推理_y','直观_y','运算_y','数据处理_y']].values)/df05_merged[['建模_y','推理_y','直观_y','运算_y','数据处理_y']].values
- #   print(df05_merged)
- #   original_unstable_number = df05_merged[df05_merged[['diff_建模','diff_推理','diff_直观','diff_运算','diff_数据处理']].abs() > 0.2].dropna(axis=0, how='all').shape[0]
- #   original_percentage = original_unstable_number / df05_merged.shape[0]
- #   print(original_percentage)
- #   df05_merged[['建模_byweight','推理_byweight','直观_byweight','运算_byweight','数据处理_byweight']] = 2/3*df05_merged[['建模_x','推理_x','直观_x','运算_x','数据处理_x']] + 1/3*df05_merged[['建模_y','推理_y','直观_y','运算_y','数据处理_y']].values
- #   df05_merged[['diff_建模','diff_推理','diff_直观','diff_运算','diff_数据处理']] = (df05_merged[['建模_byweight','推理_byweight','直观_byweight','运算_byweight','数据处理_byweight']] - df05_merged[['建模_y','推理_y','直观_y','运算_y','数据处理_y']].values)/df05_merged[['建模_y','推理_y','直观_y','运算_y','数据处理_y']].values
- #   updated_unstable_number = df05_merged[df05_merged[['diff_建模','diff_推理','diff_直观','diff_运算','diff_数据处理']].abs() > 0.2].dropna(axis=0, how='all').shape[0]
- #   updated_percentage = updated_unstable_number / df05_merged.shape[0]
- #   print(updated_percentage)
- #   print(df05_merged)
-    # 将201701的得分率为0的转成0.01
-    #df_rangeablity = (df['test201705'][['建模', '推理', '数据处理', '直观', '运算']] - df['test201701'][['建模', '推理', '数据处理', '直观', '运算']].values)/df['test201701'][['建模', '推理', '数据处理', '直观', '运算']].values
-    #print(df_merged)
-    #df['diff'] = df['test201705'] - df['test201701']
+    orignal = bigger_than_20_percent(df_diff)
+    new = bigger_than_20_percent(df_diff_weight)
 
+def bigger_than_20_percent(df):
+    data = []
+    for i, col_name in enumerate(df.columns.tolist()):
+        data.append(df[df[col_name].abs() > 0.2].shape[0]/df.shape[0])
+    
+    print(data)
+    return data
 
 def data_process(df, start, end, columns, drop_row):
     temp_df = df
