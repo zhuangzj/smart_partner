@@ -7,6 +7,11 @@ Created on Thu Jul 20 09:13:43 2017
 
 import pandas as pd
 import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib import font_manager
+
+chinesefont = font_manager.FontProperties()
+chinesefont.set_family('SimHei')
 
 def main():
     df01 = pd.read_excel('./data/subject_literacy/grade8-math201701.xls', skiprows=1)
@@ -19,15 +24,66 @@ def main():
     
     # 没有考到的素养沿用上一次考试该素养的值
     df05 = pd.merge(df05, df01[['数据处理']], left_index=True, right_index=True, how='left')
-    rangeability05_df, df_weight05_2to1, df_weight05_3to1, df_weight05_4to1 = rangeablity_df(df01, df01, df01, df01, df05)
-    rangeability05_df.columns = pd.MultiIndex.from_product([['test201705'], rangeability05_df.columns])
+    rangeability05_df, df05weight_2to1, df05weight_3to1, df05weight_4to1 = rangeablity_df(df01, df01, df01, df01, df05)
+#    rangeability05_df.columns = pd.MultiIndex.from_product([['test201705'], rangeability05_df.columns])
     
-    rangeability07_df, df_weight07_2to1, df_weight07_3to1, df_weight07_4to1 = rangeablity_df(df05, df_weight05_2to1, df_weight05_3to1, df_weight05_4to1, df07)
-    rangeability07_df.columns = pd.MultiIndex.from_product([['test201707'], rangeability07_df.columns])
-    rangeability_merged_df = pd.merge(rangeability05_df, rangeability07_df, left_index=True, right_index=True)
-    print(rangeability_merged_df)
-    rangeability_merged_df.to_csv('./data/学科素养规则改进数据模拟.csv')
+    rangeability07_df, df07weight_2to1, df07weight_3to1, df07weight_4to1 = rangeablity_df(df05, df05weight_2to1, df05weight_3to1, df05weight_4to1, df07)
+#    rangeability07_df.columns = pd.MultiIndex.from_product([['test201707'], rangeability07_df.columns])
+#    rangeability_merged_df = pd.merge(rangeability05_df, rangeability07_df, left_index=True, right_index=True)
+#    print(rangeability_merged_df)
+#    rangeability_merged_df.to_csv('./data/学科素养规则改进数据模拟.csv')
+     # 检验
+#    valid_modeling(df01, df05, df07)
+    # 学科素养曲线图
+    subject_literacy_line_chart(df01, df05, df07, df05weight_2to1, df05weight_3to1, df07weight_2to1, df07weight_3to1)
+
+def subject_literacy_line_chart(df01, df05, df07, df05weight_2to1, df05weight_3to1, df07weight_2to1, df07weight_3to1):
+    origin_df, weight_2to1_df = subject_literacy(df01, df05, df07, df05weight_2to1, df05weight_3to1, df07weight_2to1, df07weight_3to1)
+    plot_line_chart(origin_df, '原始学科素养计算')
+    plot_line_chart(weight_2to1_df, '2：1权重学科素养计算')
+
+def plot_line_chart(df, title):
+    ax = df.plot(kind='line')
+    ax.set_ylim(0,1)
+    ax.set_title(title, fontproperties=chinesefont)
+    plt.legend(prop=chinesefont)
+    plt.show()
     
+def subject_literacy(df01, df05, df07, df05weight_2to1, df05weight_3to1, df07weight_2to1, df07weight_3to1):
+#    print('origin')
+    origin_df = avg_subject_literacy(df01, df05, df07) 
+#    print('weigh2:1')
+    weight_2to1_df = avg_subject_literacy(df01, df05weight_2to1, df07weight_2to1)
+#    print('weigh3:1')
+#    weight_3to1_subject_literacy(df01, df05weight_3to1, df07weight_3to1)
+    return origin_df, weight_2to1_df
+     
+def weight_3to1_subject_literacy(df01, df05weight_3to1, df07weight_3to1):
+    df01_modeling = df01['建模'].mean()
+    df05_modeling = df05weight_3to1['建模'].mean()
+    df07_modeling = df07weight_3to1['建模'].mean()
+    print(df01_modeling)
+    print(df05_modeling)
+    print(df07_modeling)
+
+def avg_subject_literacy(df01, df05, df07):
+    data = []
+    data.append(df_col_mean(df01))
+    data.append(df_col_mean(df05))
+    data.append(df_col_mean(df07))
+    df = pd.DataFrame(data, columns=('建模', '推理', '数据处理', '直观', '运算'))
+    df.set_index([['201701', '201705', '201707']], inplace=True)
+ #   print(df)
+    return df
+    
+def df_col_mean(df):
+    data = {}
+    for i, colname in enumerate(df.columns.tolist()):
+        #print(colname)
+        data[colname] = df[colname].mean()
+    
+    return data
+
 def rangeablity_df(df_last, df_last_weight_2to1, df_last_weight_3to1, df_last_weight_4to1, df):
     data = []
     # 两次原始数据计算成绩变化程度
@@ -90,7 +146,6 @@ def bigger_than_20_percent(df):
     for i, col_name in enumerate(df.columns.tolist()):
         data.append(df[df[col_name].abs() > 0.2].shape[0]/df.shape[0])
     
- #   print(data)
     return data
 
 def data_process(df, start, end, columns, drop_row):
@@ -113,5 +168,66 @@ def data_process(df, start, end, columns, drop_row):
     
     df.set_index(['教育ID', '姓名'], inplace=True)
     return df
+
+def valid_modeling(df01, df05, df07):
+    df = pd.merge(df05, df01, left_index=True, right_index=True)
+    print(df01.loc['13226593', '吕伟']['建模'])
+    print(df05.loc['13226593', '吕伟']['建模'])
+    print(df07.loc['13226593', '吕伟']['建模'])
+#    print(df.loc['13226593', '吕伟'])
+    data = []
+    df = df[['建模_x', '建模_y']]
+    df['建模_y_dividend'] = df['建模_y']
+    df.ix[df['建模_y_dividend'] == 0, '建模_y_dividend'] = 0.01
+    df['05建模rangeability'] = (df['建模_x'] - df['建模_y']) / df['建模_y_dividend']
+    count = df[df['05建模rangeability'].abs() > 0.2].shape[0]
+    percentage = count / df.shape[0]
+    print(percentage)
+    data.append(percentage)
+    df['2:1建模_x'] = 1/3*df['建模_x'] + 2/3*df['建模_y']
+    df['(2:1)05建模rangeability'] = (df['2:1建模_x'] - df['建模_y']) / df['建模_y_dividend']
+    #print(df)
+    count = df[df['(2:1)05建模rangeability'].abs() > 0.2].shape[0]
+    percentage = count / df.shape[0]
+    print(percentage)
+    data.append(percentage)
+    df['3:1建模_x'] = 1/4*df['建模_x'] + 3/4*df['建模_y']
+    df['(3:1)05建模rangeability'] = (df['3:1建模_x'] - df['建模_y']) / df['建模_y_dividend']
+    
+    percentage = count / df.shape[0]
+    print(percentage)
+    data.append(percentage)
+    df = pd.merge(df, df07[['建模', '运算']], left_index=True, right_index=True)
+    df = df.iloc[:, 0:9]
+    df['建模_x_dividend'] = df['建模_x']
+    df.ix[df['建模_x_dividend'] == 0, '建模_x_dividend'] = 0.01
+    df['07建模rangeability'] = (df['建模'] - df['建模_x']) / df['建模_x_dividend']
+    #print(df)
+    count = df[df['07建模rangeability'].abs() > 0.2].shape[0]
+    percentage = count / df.shape[0]
+    print(percentage)
+    data.append(percentage)
+    df['2:1建模_z'] = 1/4*df['建模'] + 3/4*df['2:1建模_x']
+    df['2:1建模_x_dividend'] = df['2:1建模_x']
+    df.ix[df['2:1建模_x_dividend'] == 0, '2:1建模_x_dividend'] = 0.01
+    df['(2:1)07建模rangeability'] = (df['2:1建模_z'] - df['2:1建模_x']) / df['2:1建模_x_dividend']
+    count = df[df['(2:1)07建模rangeability'].abs() > 0.2].shape[0]
+    percentage = count / df.shape[0]
+    print(percentage)
+    data.append(percentage)
+    df['3:1建模_z'] = 1/4*df['建模'] + 3/4*df['3:1建模_x']
+    df['3:1建模_x_dividend'] = df['3:1建模_x']
+    df.ix[df['3:1建模_x_dividend'] == 0, '3:1建模_x_dividend'] = 0.01
+    df['(3:1)07建模rangeability'] = (df['3:1建模_z'] - df['3:1建模_x']) / df['3:1建模_x_dividend']
+    df_bigthan3perc = df[df['(3:1)05建模rangeability'].abs() > 0.2]
+    print(df_bigthan3perc[['建模_x', '建模_y', '建模']])
+    print(df_bigthan3perc.loc['13226593', '吕伟'])
+    print(df.loc['13226754', '赵云喆'])
+    count = df[df['(3:1)07建模rangeability'].abs() > 0.2].shape[0]
+    percentage = count / df.shape[0]
+    print(percentage)
+    data.append(percentage)
+    
+    
     
 if __name__ == "__main__": main() 
