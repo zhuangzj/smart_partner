@@ -171,10 +171,6 @@ def data_process(df, start, end, columns, drop_row):
 
 def valid_modeling(df01, df05, df07):
     df = pd.merge(df05, df01, left_index=True, right_index=True)
-    print(df01.loc['13226593', '吕伟']['建模'])
-    print(df05.loc['13226593', '吕伟']['建模'])
-    print(df07.loc['13226593', '吕伟']['建模'])
-#    print(df.loc['13226593', '吕伟'])
     data = []
     df = df[['建模_x', '建模_y']]
     df['建模_y_dividend'] = df['建模_y']
