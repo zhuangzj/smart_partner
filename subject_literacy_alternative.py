@@ -13,16 +13,32 @@ from matplotlib import font_manager
 chinesefont = font_manager.FontProperties()
 chinesefont.set_family('SimHei')
 
-def main():
-    df01 = pd.read_excel('./data/subject_literacy/grade8-physics201701.xlsx', skiprows=1)
-    df05 = pd.read_excel('./data/subject_literacy/grade8-physics201705.xlsx', skiprows=1)
-    df07 = pd.read_excel('./data/subject_literacy/grade8-physics201707.xlsx', skiprows=1)
-    
+def physics():
+    df01, df05, df07 = read_data('physics', 'xlsx')
     # 每个学生学科素养的平均得分率
     df01 = data_process_with_sheets(df01, 62, 111)
     df05 = data_process_with_sheets(df05, 62, 111)
-    df07 = data_process_with_sheets(df07, 70, 127)    
+    df07 = data_process_with_sheets(df07, 70, 127)
+    return df01, df05, df07
 
+def math():
+    df01, df05, df07 = read_data('math', 'xls')
+    # 每个学生学科素养的平均得分率
+    df01 = data_process(df01, 41, 69, ['直观', '直观', '运算', '直观', '推理', '直观', '运算', '数据处理', '推理', '推理', '运算', '运算', '推理', '推理', '推理', '直观', '运算', '运算', '推理', '运算', '推理', '推理', '推理', '推理', '建模', '推理', '推理', '运算'], -2)
+    df05 = data_process(df05, 39, 65, ['推理', '推理', '推理', '直观', '直观', '推理', '直观', '推理', '推理', '建模', '推理', '推理', '运算', '直观', '建模', '建模', '直观', '直观', '运算', '推理', '运算', '建模', '运算', '直观', '推理', '推理'], -1)
+    df07 = data_process(df07, 48, 83, ['推理', '直观', '运算', '建模', '数据处理', '推理', '推理', '建模', '推理', '直观', '直观', '运算', '运算', '运算', '推理', '推理', '运算', '运算', '运算', '运算', '推理', '运算', '运算', '建模', '数据处理', '数据处理', '数据处理', '推理', '推理', '推理', '推理', '推理', '运算', '运算', '运算'], -1)
+    return df01, df05, df07
+
+def read_data(subject, suffix):
+    df01 = pd.read_excel('./data/subject_literacy/grade8-'+subject+'201701.'+suffix, skiprows=1)
+    df05 = pd.read_excel('./data/subject_literacy/grade8-'+subject+'201705.'+suffix, skiprows=1)
+    df07 = pd.read_excel('./data/subject_literacy/grade8-'+subject+'201707.'+suffix, skiprows=1)
+    return df01, df05, df07
+    
+def main():
+    # df01, df05, df07 = physics()
+    df01, df05, df07 = math()
+    
     suyang05_weight_2to1 = cal_suyang(df01, df05, 2, 1)
     suyang05_weight_3to1 = cal_suyang(df01, df05, 3, 1)
     suyang05_weight_4to1 = cal_suyang(df01, df05, 4, 1)
@@ -72,27 +88,33 @@ def cal_suyang(df_last, df_this, w1, w2):
     this_cols = df_this.columns.tolist()
     # 两次考试素养的集合
     total_cols = list(set(last_cols + this_cols))
+    df_this.columns = list(map(lambda x: x+'_x', df_this.columns.tolist()))
+    df_last.columns = list(map(lambda y: y+'_y', df_last.columns.tolist()))
     df = pd.merge(df_this, df_last, left_index=True, right_index=True)
     for i, col in enumerate(total_cols):
         if (col in last_cols) & (col not in this_cols):
             df[col] = df[col+'_y'] 
+            df_this[col+'_y'] = df[col]
         elif (col not in last_cols) & (col in this_cols):
             df[col] = df[col+'_x'] 
         elif (col in last_cols) & (col in this_cols):
             df[col] = w1/(w1+w2) * df[col+'_y'] + w2/(w1+w2) * df[col+'_x']
-            
+    
+    df_this.columns = list(map(lambda x: x[:-2], df_this.columns.tolist()))
+    df_last.columns = list(map(lambda y: y[:-2], df_last.columns.tolist()))        
     df = df[total_cols]
     return df
 
 def rangeablity(df_last, df_this):
     # 两次成绩(unweight)
     df = pd.merge(df_this, df_last, left_index=True, right_index=True)
-    columns = df_this.columns.tolist()
+    columns = list(set(df_last.columns.tolist() + df_this.columns.tolist()))
     columns_diff = list(map(lambda x: x+'_diff', columns))
     columns_x = list(map(lambda x: x+'_x', columns))
     columns_y = list(map(lambda x: x+'_y', columns))
     # 原始的成绩相对于上次考试的成绩变化
     df[columns_diff] = df[columns_x] - df[columns_y].values
+    # print(df[columns_diff])
     # 避免被除数出现0的情况
     df_dividend = df[columns_y]
     df_dividend = avoid_dividend_be_0(df_dividend)
