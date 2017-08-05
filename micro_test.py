@@ -40,9 +40,11 @@ def micro_test():
     df3, coding3 = read_excel_by_name('2016-数学-八年级-上学期-单元微测-001（分式1）')
     df4, coding4 = read_excel_by_name('2016-数学-八年级-上学期-单元微测-002（分式2）')
     df5, coding5 = read_excel_by_name('2016-数学-八年级-下学期-单元微测-001（变量之间的关系）')
-#    df1, coding1 = tidy_micro_coding_A(df1, coding1)
-#    df2, coding2 = tidy_micro_coding_A(df2, coding2)
+    df1, coding1 = tidy_micro_coding_A(df1, coding1)
+    df2, coding2 = tidy_micro_coding_A(df2, coding2)
     df3, coding3 = tidy_micro_coding_B(df3, coding3)
+    df4, coding4 = tidy_micro_coding_B(df4, coding4)
+    df5, coding5 = tidy_micro_coding_B(df5, coding5)
 
 def read_excel_by_name(filename):
     df = pd.read_excel('./data/micro_test/' + filename + '.xlsx', sheetname=1, converters={'学号':str})
@@ -60,14 +62,22 @@ def tidy_micro_coding_A(df, coding):
     return df, coding
 
 def tidy_micro_coding_B(df, coding):
-    coding.columns.values[2:8] = coding.iloc[0, 2:8].tolist()
-    coding.columns.values[12:18] = coding.iloc[0, 12:18].tolist()
+    # cause kernel die
+    # knowledge = list(coding.iloc[0, 2:8])
+    # context = list(coding.iloc[0, 12:18])
+    # coding.columns.values[2:8] = knowledge
+    # coding.columns.values[12:18] = context
     coding = coding.iloc[1:, :]
-    print(coding)
+    coding['题目编码'] = 'P0' + coding['题目编码'].astype('int').astype(str) + '01'
+    coding = coding[['题目编码', '学习表现指标代码', '核心素养', '评分标准', '能力水平']]
+    coding['评分标准'] = coding['评分标准'].apply(lambda x: get_score(x))
+    coding.columns.values[1] = '学习表现指标'
+    coding.columns.values[3] = '总分'
+    df = tidy_micro_test(df)
     return df, coding
  
 def tidy_micro_test(df):
-    df = df.iloc[:, 6:].head()
+    df = df.iloc[:, 6:]
     df.drop('性别', axis=1, inplace=True)
     df.rename(columns={'学号': '教育ID'}, inplace=True)
     df.set_index(['教育ID', '姓名'], inplace=True)
