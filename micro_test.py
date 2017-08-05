@@ -30,7 +30,7 @@ def tidy_overall_test_and_coding(ability_start, ability_end, suyang_start, suyan
     suyang.name='核心素养'
     coding = pd.concat([ability, suyang], axis=1)
     df = df.iloc[2:, 0:ability_end]
-    df.set_index(['教育ID', '姓名'], inplace=True)
+    #df.set_index(['教育ID', '姓名'], inplace=True)
     df.drop('题目编码', axis=1, inplace=True)
     return df, coding
     
@@ -45,6 +45,7 @@ def micro_test():
     df3, coding3 = tidy_micro_coding_B(df3, coding3)
     df4, coding4 = tidy_micro_coding_B(df4, coding4)
     df5, coding5 = tidy_micro_coding_B(df5, coding5)
+    return df1, coding1, df2, coding2, df3, coding3, df4, coding4, df5, coding5
 
 def read_excel_by_name(filename):
     df = pd.read_excel('./data/micro_test/' + filename + '.xlsx', sheetname=1, converters={'学号':str})
@@ -80,16 +81,40 @@ def tidy_micro_test(df):
     df = df.iloc[:, 6:]
     df.drop('性别', axis=1, inplace=True)
     df.rename(columns={'学号': '教育ID'}, inplace=True)
-    df.set_index(['教育ID', '姓名'], inplace=True)
+    # cannot merge overall and micro on index
+    #df.set_index(['教育ID', '姓名'], inplace=True) 
     return df
 
 def get_score(x):
     score = x[1:x.index('分')]  
     return score
 
+def overlap_df(overall01, overall05, overall07, micro1, micro2, micro3, micro4, micro5):
+    
+    micro1_overlap = overlap(overall01, overall05, overall07, micro1)
+    micro2_overlap = overlap(overall01, overall05, overall07, micro2)
+    micro3_overlap = overlap(overall01, overall05, overall07, micro3)
+    micro4_overlap = overlap(overall01, overall05, overall07, micro4)
+    micro5_overlap = overlap(overall01, overall05, overall07, micro5)
+    df = pd.DataFrame({'2016-数学-八年级-上学期-单元微测-001（二次根式1）': micro1_overlap, 
+                  '2016-数学-八年级-上学期-单元微测-002（二次根式2）': micro2_overlap,
+                  '2016-数学-八年级-上学期-单元微测-001（分式1）': micro3_overlap,
+                  '2016-数学-八年级-上学期-单元微测-002（分式2）': micro4_overlap,
+                  '2016-数学-八年级-下学期-单元微测-001（变量之间的关系）': micro5_overlap}, index=['201701', '201705', '201707'])
+    return df
+
+def overlap(overall01, overall05, overall07, micro):
+    micro_overlap = []
+    micro_overlap.append(pd.merge(overall01, micro, on=['教育ID', '姓名']).shape[0])
+    micro_overlap.append(pd.merge(overall05, micro, on=['教育ID', '姓名']).shape[0])
+    micro_overlap.append(pd.merge(overall07, micro, on=['教育ID', '姓名']).shape[0])
+    return micro_overlap
+
 def main():
-    # overall01, ocoding01, overall05, ocoding05, overall07, ocoding07 = overall_test('math', 'xls')
-    micro_test()
+    overall01, coding01, overall05, coding05, overall07, coding07 = overall_test('math', 'xls')
+    micro1, coding1, micro2, coding2, micro3, coding3, micro4, coding4, micro5, coding5 = micro_test()
+    df = overlap_df(overall01, overall05, overall07, micro1, micro2, micro3, micro4, micro5)
+    df.to_csv('./data/总测微测.csv')
     
 if __name__ == "__main__": main() 
 
